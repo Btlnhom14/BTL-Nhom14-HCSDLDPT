@@ -77,8 +77,13 @@ def extract_features_from_folder(folder_path, output_csv):
                 else:
                     print(f"✘ Lỗi xử lý: {filename}")
 
-# ===== 6. Đường dẫn của bạn
+# ===== 6. Đường dẫn tương đối
 if __name__ == "__main__":
-    folder_path = r"C:\Users\TGDD\OneDrive\Tài liệu\GitHub\multifps\BTL-Nhom14-HCSDLDPT\data"
-    output_csv = r"C:\Users\TGDD\OneDrive\Tài liệu\GitHub\multifps\BTL-Nhom14-HCSDLDPT\Xay_dung_bo_thuoc_tinh\Thuoc_tinh_mau_sac\features.csv"
+    # Đường dẫn thư mục hiện tại (chứa file .py)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Đường dẫn đến thư mục chứa ảnh và file CSV đầu ra
+    folder_path = os.path.join(base_dir, "..", "..", "data")
+    output_csv = os.path.join(base_dir, "features.csv")
+
     extract_features_from_folder(folder_path, output_csv)
