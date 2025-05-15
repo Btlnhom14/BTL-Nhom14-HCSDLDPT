@@ -10,3 +10,4 @@ jupyter>=1.0.0
 pillow>=8.0.0
 seaborn>=0.11.0
 tqdm
+sqlite3
