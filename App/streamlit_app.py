@@ -9,7 +9,7 @@ from feature_extractor import BirdFeatureExtractor
 
 class BirdImageDatabase:
     def __init__(self, db_path='bird_features.db'):
-        self.db_path = db_path
+        self.db_path = os.path.join(os.path.dirname(__file__), db_path)
         self.conn = None
         self.init_db()
     
@@ -76,7 +76,7 @@ class BirdImageDatabase:
 class BirdImageRetrieval:
     def __init__(self, db_path='bird_features.db'):
         self.feature_extractor = BirdFeatureExtractor()
-        self.db = BirdImageDatabase(db_path)
+        self.db = BirdImageDatabase(db_path=os.path.join(os.path.dirname(__file__), db_path))
         self.image_paths = None
         self.image_features = None
         self.load_database()
@@ -171,7 +171,7 @@ class BirdImageRetrieval:
             # Đặt trọng số theo loại đặc trưng - điều chỉnh theo nhu cầu
             weights[:color_end] *= 80.0        # Tăng mạnh độ quan trọng của màu sắc
             weights[color_end:shape_end] *= 10.0# Tăng vừa phải độ quan trọng của hình dạng
-            weights[shape_end:] *= 0.2        # Giảm độ quan trọng của kết cấu
+            weights[shape_end:] *= 0.5      # Giảm độ quan trọng của kết cấu
             
             # Chuẩn hóa để đảm bảo công bằng giữa các đặc trưng
             # Đầu tiên chuẩn hóa vector đặc trưng
@@ -241,7 +241,7 @@ def main():
             st.image(uploaded_file, caption="Ảnh tải lên", width=300)
             
             # Lưu ảnh tạm thời để xử lý
-            temp_image_path = "temp_query_image.jpg"
+            temp_image_path = os.path.join(os.path.dirname(__file__), "temp_query_image.jpg")
             with open(temp_image_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
             
@@ -313,22 +313,32 @@ def main():
                 retrieval_system = BirdImageRetrieval()
                 if retrieval_system.image_paths:
                     st.info(f"Số lượng ảnh trong cơ sở dữ liệu: {len(retrieval_system.image_paths)}")
-                    
-                    # Hiển thị danh sách ảnh
-                    if st.checkbox("Hiển thị danh sách ảnh"):
-                        st.write("Danh sách ảnh trong cơ sở dữ liệu:")
-                        for i, path in enumerate(retrieval_system.image_paths[:20]):  # Chỉ hiển thị 20 ảnh đầu tiên
-                            st.write(f"{i+1}. {path}")
-                        
-                        if len(retrieval_system.image_paths) > 20:
-                            st.write(f"... và {len(retrieval_system.image_paths) - 20} ảnh khác.")
                 else:
                     st.warning("Cơ sở dữ liệu đang trống.")
-                
                 retrieval_system.close()
             except Exception as e:
                 st.error(f"Lỗi khi truy vấn cơ sở dữ liệu: {str(e)}")
 
+        # Đặt checkbox và danh sách ảnh ra ngoài nút bấm
+        retrieval_system = BirdImageRetrieval()
+        if retrieval_system.image_paths:
+            show_list = st.checkbox("Hiển thị danh sách ảnh", key="show_image_list")
+            if show_list:
+                st.write("Danh sách ảnh trong cơ sở dữ liệu:")
+                for i, path in enumerate(retrieval_system.image_paths[:20]):
+                    cols = st.columns([1, 5])
+                    with cols[0]:
+                        try:
+                            img = Image.open(path)
+                            img.thumbnail((40, 40))
+                            st.image(img, width=40)
+                        except Exception:
+                            st.write("Không thể mở ảnh")
+                    with cols[1]:
+                        st.write(f"{i+1}. {os.path.basename(path)}")
+                if len(retrieval_system.image_paths) > 20:
+                    st.write(f"... và {len(retrieval_system.image_paths) - 20} ảnh khác.")
+        retrieval_system.close()
 
 if __name__ == "__main__":
     main()
